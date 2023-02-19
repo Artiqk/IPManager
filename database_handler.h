@@ -1,18 +1,13 @@
 #include "ip_handler.h"
 
+int read_mask();
 void handle_sqlite_error (sqlite3* db, char* message);
 void sqlite_connect (sqlite3** db, char* database_file);
 int number_of_ip (sqlite3* db);
 int insert_ip (sqlite3* db, const char* ip_str, int prefix_length);
 void print_ip_address (int ip[], int mask[]);
 void load_ip_addresses (sqlite3* db, int (*ip_addresses)[4], int (*masks)[4], const int rows);
-char* read_ip ();
-int read_mask();
 
-void flush_buffer () {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
 
 char* read_ip () {
     char* ip_address = (char *) malloc(16 * sizeof(char));

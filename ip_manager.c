@@ -1,10 +1,10 @@
 #include "database_handler.h"
 
-int char_to_int(char buf);
-void print_title(char *title);
-void display_ip_addresses(int mask_filter, int (*ip_addresses)[4], int (*masks)[4], int rows);
-void add_ip_to_database(sqlite3 *db);
 void main_menu(sqlite3 *db, int (*ip_addresses)[4], int (*masks)[4], int rows);
+void add_ip_to_database(sqlite3 *db);
+void display_ip_addresses(int mask_filter, int (*ip_addresses)[4], int (*masks)[4], int rows);
+void print_title(char *title);
+int char_to_int(char buf);
 
 
 int main (int argc, char* argv[]) {
