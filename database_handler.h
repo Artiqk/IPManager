@@ -1,19 +1,25 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sqlite3.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include "ip_handler.h"
+
+void handle_sqlite_error (sqlite3* db, char* message);
+void sqlite_connect (sqlite3** db, char* database_file);
+int number_of_ip (sqlite3* db);
+int insert_ip (sqlite3* db, const char* ip_str, int prefix_length);
+void print_ip_address (int ip[], int mask[]);
+void load_ip_addresses (sqlite3* db, int (*ip_addresses)[4], int (*masks)[4], const int rows);
+char* read_ip ();
+int read_mask();
+
+void flush_buffer () {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
 
 char* read_ip () {
     char* ip_address = (char *) malloc(16 * sizeof(char));
 
     printf("IP: ");
 
-    if (fgets(ip_address, 16, stdin) == NULL) {
-        fprintf(stderr, "Error reading input\n");
-        return "";
-    }
+    fgets(ip_address, 16, stdin);
 
     int len = strlen(ip_address);
 
@@ -22,6 +28,22 @@ char* read_ip () {
     }
 
     return ip_address;
+}
+
+
+int read_mask () {
+    char prefix_length_str[4];
+    int prefix_length = 0;
+
+    while (prefix_length < 8 || prefix_length > 31) {
+        printf("Subnet mask (8-31): ");
+
+        fgets(prefix_length_str, 4, stdin);
+
+        prefix_length = atoi(prefix_length_str);
+    }
+
+    return prefix_length;
 }
 
 
@@ -43,12 +65,38 @@ void sqlite_connect (sqlite3** db, char* database_file) {
 }
 
 
-int insert_ip (sqlite3* db, const char* ip_str) {
+int number_of_ip (sqlite3* db) {
+    const char* sql_query = "SELECT COUNT(*) FROM ip_addresses;";
+
+    sqlite3_stmt* statement = NULL;
+
+    int result = -1;
+
+    int rc = sqlite3_prepare_v2(db, sql_query, strlen(sql_query) + 1, &statement, NULL);
+
+    if (rc == SQLITE_OK) {
+        rc = sqlite3_step(statement);
+        if (rc == SQLITE_ROW) {
+            result = sqlite3_column_int(statement, 0);
+        }
+    }
+
+    sqlite3_finalize(statement);
+    
+    return result;
+}
+
+
+int insert_ip (sqlite3* db, const char* ip_str, int prefix_length) {
     int ip[4];
+    int mask[4];
+
+    char* mask_str = prefix_to_mask(prefix_length);
 
     ip_str_to_array(ip_str, ip);
+    ip_str_to_array(mask_str, mask);
 
-    char* sql_query = "INSERT INTO ip_addresses (address1, address2, address3, address4) VALUES (?, ?, ?, ?);";
+    char* sql_query = "INSERT INTO ip_addresses (ip1, ip2, ip3, ip4, mask1, mask2, mask3, mask4) VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 
     sqlite3_stmt* statement = NULL;
 
@@ -60,6 +108,7 @@ int insert_ip (sqlite3* db, const char* ip_str) {
 
     for (int i = 0; i < 4; i++) {
         sqlite3_bind_int(statement, i + 1, ip[i]);
+        sqlite3_bind_int(statement, i + 5, mask[i]);
     }
 
     rc = sqlite3_step(statement);
@@ -76,110 +125,10 @@ int insert_ip (sqlite3* db, const char* ip_str) {
 }
 
 
-void print_binary(int number) {
-    for (int i = 7; i >= 0; i--) {
-        printf("%d", (number >> i) & 1);
-    }
-}
-
-
-void print_ip_binary (int ip[]) {
-    for (int i = 0; i < 4; i++) {
-        print_binary(ip[i]);
-        printf(".");
-    }
-
-    printf("\n");
-}
-
-char* ip_to_string (int ip[]) {
-    char* ip_str = (char *)malloc(16 * sizeof(char));
-
-    if (ip_str == NULL) {
-        fprintf(stderr, "Error: Out of memory\n");
-        exit(1);
-    }
-
-    sprintf(ip_str, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-
-    return ip_str;
-}
-
-
-int ip_str_to_array(const char* ip_str, int* ip) {
-    if (sscanf(ip_str, "%d.%d.%d.%d", &ip[0], &ip[1], &ip[2], &ip[3]) != 4) {
-        fprintf(stderr, "Invalid IP address format: %s\n", ip_str);
-        return 0;
-    }
-
-    return 1;
-}
-
-int is_private_ip (const char* ip_str) {
-    int ip[4];
-
-    ip_str_to_array(ip_str, ip);
-    
-    if (ip[0] == 10 || // 10.0.0.0
-        (ip[0] == 172 && ip[1] >= 16 && ip[1] <= 31) || // 172.16.0.0 - 172.31.0.0
-        (ip[0] == 192 && ip[1] == 168) // 192.168.0.0
-    ) {
-        return 1;
-    }
-
-    return 0;
-}
-
-
-int is_loopback_ip (const char* ip_str) {
-    struct in_addr ip;
-
-    if (inet_pton(AF_INET, ip_str, &ip) != 1) {
-        return -1; // Invalid ip address format
-    }
-
-    return ip.s_addr == htonl(INADDR_LOOPBACK);
-}
-
-
-int is_link_local_ip(const char* ip_str) {
-    int ip[4];
-
-    ip_str_to_array(ip_str, ip);
-
-    return ip[0] == 169 && ip[1] == 254;
-}
-
-
-int is_multicast_ip (const char* ip_str) {
-    int ip[4];
-
-    ip_str_to_array(ip_str, ip);
-
-    return ip[0] >= 224 && ip[0] <= 239;
-}
-
-
-int is_broadcast_ip (const char* ip_str)  {
-    int ip[4];
-
-    ip_str_to_array(ip_str, ip);
-
-    return (ip[0] == 255 && ip[1] == 255 && ip[2] == 255 && ip[3] == 255);
-}
-
-
-int is_unspecified_ip (const char* ip_str) {
-    int ip[4];
-
-    ip_str_to_array(ip_str, ip);
-
-    return (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
-}
-
-
-void fancy_print_ip_address (int ip[]) {
+void print_ip_address (int ip[], int mask[]) {
     char* ip_str = ip_to_string(ip);
+
+    printf("-------------------------------------------------------------\n\n");
 
     if (
         is_multicast_ip(ip_str) || 
@@ -195,31 +144,38 @@ void fancy_print_ip_address (int ip[]) {
         printf("The IP address is public\n\n");
     }
 
-    printf("Decimal: \t%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
-    printf("Hexadecimal: \t0x%x.0x%x.0x%x.0x%x\n", ip[0], ip[1], ip[2], ip[3]);
-    printf("Binary: \t");
+    printf("\tDecimal: \t%d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
+    printf("\tBinary: \t");
     print_ip_binary(ip);
-    printf("\n----------------------------------------------------\n\n");
+    printf("\tHexadecimal: \t0x%x.0x%x.0x%x.0x%x\n", ip[0], ip[1], ip[2], ip[3]);
+
+    printf("\nMask:\n\n");
+
+    printf("\tDecimal: \t%d.%d.%d.%d\n", mask[0], mask[1], mask[2], mask[3]);
+    printf("\tBinary: \t");
+    print_ip_binary(mask);
+    printf("\tHexadecimal: \t0x%x.0x%x.0x%x.0x%x\n", mask[0], mask[1], mask[2], mask[3]);
+    printf("\n-------------------------------------------------------------\n");
 }
 
 
-void display_ip_addresses (sqlite3* db, char* mask_str) {
+void load_ip_addresses (sqlite3* db, int (*ip_addresses)[4], int (*masks)[4], const int rows) {
     sqlite3_stmt* statement = NULL;
-    const char* sql_query = "SELECT address1, address2, address3, address4 FROM ip_addresses;";
+    const char* sql_query = "SELECT ip1, ip2, ip3, ip4, mask1, mask2, mask3, mask4 FROM ip_addresses;";
     int rc = sqlite3_prepare_v2(db, sql_query, strlen(sql_query) + 1, &statement, NULL);
 
     if (rc != SQLITE_OK) {
         handle_sqlite_error(db, "Error preparing statement");
     }
 
-    int ip[4];
+    int row_index = 0;
 
     while ((rc = sqlite3_step(statement)) == SQLITE_ROW) {
         for (int i = 0; i < 4; i++) {
-            ip[i] = sqlite3_column_int(statement, i);
-        }  
-
-        fancy_print_ip_address(ip);
+            ip_addresses[row_index][i] = sqlite3_column_int(statement, i);
+            masks[row_index][i] = sqlite3_column_int(statement, i + 4);
+        }
+        row_index++;
     }
 
     if (rc != SQLITE_DONE) {
