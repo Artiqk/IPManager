@@ -1,5 +1,8 @@
 #include "ip_handler.h"
 
+void add_ip_to_database(sqlite3 *db);
+void display_ip_addresses(int mask_filter, int** ip_addresses, int** masks, int rows);
+char* read_ip ();
 int read_mask();
 void handle_sqlite_error (sqlite3* db, char* message);
 void sqlite_connect (sqlite3** db, char* database_file);
@@ -9,6 +12,25 @@ void print_ip_address (int ip[], int mask[]);
 void load_ip_addresses (sqlite3* db, int*** ip_addresses, int*** masks, const int rows);
 int** allocate_2d_array_memory(int rows, int cols);
 void free_2d_array(int** array, int rows);
+
+
+void add_ip_to_database (sqlite3* db) {
+    char* ip_str = read_ip();
+
+    int prefix_length = read_mask();
+
+    insert_ip(db, ip_str, prefix_length);
+}
+
+
+void display_ip_addresses (int mask_filter, int** ip_addresses, int** masks, int rows) {
+    for (int i = 0; i < rows; i++) {
+        int mask_prefix = mask_to_prefix(ip_to_string(masks[i]));
+        if (mask_filter == mask_prefix || mask_filter == 0) {
+            print_ip_address(ip_addresses[i], masks[i]);
+        }
+    }
+}
 
 
 char* read_ip () {

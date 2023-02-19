@@ -1,8 +1,6 @@
 #include "database_handler.h"
 
 void main_menu (sqlite3* db, int*** ip_addresses, int*** masks, int rows);
-void add_ip_to_database(sqlite3 *db);
-void display_ip_addresses(int mask_filter, int** ip_addresses, int** masks, int rows);
 void print_title(char *title);
 int char_to_int(char buf);
 
@@ -86,25 +84,6 @@ void main_menu (sqlite3* db, int*** ip_addresses, int*** masks, int rows) {
                 break;
         }
     }   
-}
-
-
-void add_ip_to_database (sqlite3* db) {
-    char* ip_str = read_ip();
-
-    int prefix_length = read_mask();
-
-    insert_ip(db, ip_str, prefix_length);
-}
-
-
-void display_ip_addresses (int mask_filter, int** ip_addresses, int** masks, int rows) {
-    for (int i = 0; i < rows; i++) {
-        int mask_prefix = mask_to_prefix(ip_to_string(masks[i]));
-        if (mask_filter == mask_prefix || mask_filter == 0) {
-            print_ip_address(ip_addresses[i], masks[i]);
-        }
-    }
 }
 
 
