@@ -11,7 +11,7 @@ sqlite3 ip.db < create.sql
 ```
 ## Compile
 ```
-./compile
+./compile.sh
 ```
 ## Execute
 ```
