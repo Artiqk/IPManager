@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gcc -o prog ip_manager.c -lsqlite3 -Wall
+gcc -o ip_manager ip_manager.c -lsqlite3 -Wall

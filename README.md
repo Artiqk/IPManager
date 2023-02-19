@@ -11,5 +11,9 @@ sqlite3 ip.db < create.sql
 ```
 ## Compile
 ```
-gcc -o prog ip_manager.c -lsqlite3
+./compile
+```
+## Execute
+```
+./ip_manager
 ```
