@@ -32,6 +32,9 @@ int main (int argc, char* argv[]) {
 void main_menu (sqlite3* db, int (*ip_addresses)[4], int (*masks)[4], int rows) {
     print_title("IP-Manager");
 
+    int rows_updated = rows;
+    int ip_added = 0;
+
     while (1) {
         printf("1. Add an IP\n");
         printf("2. Display stored IPs\n");
@@ -47,12 +50,17 @@ void main_menu (sqlite3* db, int (*ip_addresses)[4], int (*masks)[4], int rows) 
         if (choice < 1 || choice > 3) {
             continue;
         }
+        
+        if (ip_added) {
+            rows_updated = number_of_ip(db);
+            load_ip_addresses(db, ip_addresses, masks, rows_updated);
+            ip_added = 0;
+        }
 
         switch (choice) {
             case 1:
                 add_ip_to_database(db);
-                rows = number_of_ip(db);
-                load_ip_addresses(db, ip_addresses, masks, rows);
+                ip_added = 1;
                 break;
             case 2:
                 int mask_filter = 0;
@@ -67,7 +75,7 @@ void main_menu (sqlite3* db, int (*ip_addresses)[4], int (*masks)[4], int rows) 
                     mask_filter = read_mask();
                 }
 
-                display_ip_addresses(mask_filter, ip_addresses, masks, rows);
+                display_ip_addresses(mask_filter, ip_addresses, masks, rows_updated);
                 break;
             case 3:
                 exit(0);
