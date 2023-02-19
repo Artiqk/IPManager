@@ -1,16 +1,12 @@
 # IP-Manager
 You will need a Debian with Aptitude to make this program work
-## Install the fancy menu
+## Install the dependancies
 ```
-sudo apt install figlet
-```
-## Install & prepare the SQLite3 database
-Install the package to use sqlite3
-```
-sudo apt install sqlite3 libsqlite3-dev
+sudo apt install figlet sqlite3 libsqlite3-dev
 ```
 Then you'll need to prepare the database
 ```
+touch ip.db
 sqlite3 ip.db < create.sql
 ```
 ## Compile
