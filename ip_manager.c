@@ -19,7 +19,7 @@ int main (int argc, char* argv[]) {
 
     int masks[rows][4];
 
-    load_ip_addresses(db, ip_addresses, masks, rows);
+    load_ip_addresses(db, ip_addresses, masks, rows); // FIXME - I need to reallocate memory to the 2d arrays so it stores the correct amount of ip and masks in them
 
     main_menu(db, ip_addresses, masks, rows);
 
