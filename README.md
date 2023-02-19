@@ -1,10 +1,10 @@
 # IP-Manager
-## In order to get a fancy menu
+You will need a Debian with Aptitude to make this program work
+## Install the fancy menu
 ```
 sudo apt install figlet
 ```
 ## Install & prepare the SQLite3 database
-(I'm currently using Debian with Aptitude as my package manager) <br>
 Install the package to use sqlite3
 ```
 sudo apt install sqlite3 libsqlite3-dev
