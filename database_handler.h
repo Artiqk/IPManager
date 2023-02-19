@@ -6,7 +6,6 @@ void sqlite_connect (sqlite3** db, char* database_file);
 int number_of_ip (sqlite3* db);
 int insert_ip (sqlite3* db, const char* ip_str, int prefix_length);
 void print_ip_address (int ip[], int mask[]);
-// void load_ip_addresses (sqlite3* db, int (*ip_addresses)[4], int (*masks)[4], const int rows);
 void load_ip_addresses (sqlite3* db, int*** ip_addresses, int*** masks, const int rows);
 int** allocate_2d_array_memory(int rows, int cols);
 void free_2d_array(int** array, int rows);
@@ -157,8 +156,6 @@ void print_ip_address (int ip[], int mask[]) {
 }
 
 
-// void load_ip_addresses (sqlite3* db, int (*ip_addresses)[4], int (*masks)[4], const int rows) {
-
 void load_ip_addresses (sqlite3* db, int*** ip_addresses, int*** masks, const int rows) {
     sqlite3_stmt* statement = NULL;
     const char* sql_query = "SELECT ip1, ip2, ip3, ip4, mask1, mask2, mask3, mask4 FROM ip_addresses;";
@@ -175,12 +172,9 @@ void load_ip_addresses (sqlite3* db, int*** ip_addresses, int*** masks, const in
 
     while ((rc = sqlite3_step(statement)) == SQLITE_ROW) {
         for (int i = 0; i < 4; i++) {
-            printf("DEBUG: %d\n", sqlite3_column_int(statement, i));
-            *ip_addresses[row_index][i] = sqlite3_column_int(statement, i);
-            *masks[row_index][i] = sqlite3_column_int(statement, i + 4);
+            (*ip_addresses)[row_index][i] = sqlite3_column_int(statement, i);
+            (*masks)[row_index][i] = sqlite3_column_int(statement, i + 4);
         }
-
-        printf("DEBUG IN FUNCTION: %d\n", *ip_addresses[0][0]);
 
         row_index++;
     }
