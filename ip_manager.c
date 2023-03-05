@@ -7,6 +7,8 @@ int char_to_int(char buf);
 
 int main (int argc, char* argv[]) {
 
+    system("clear");
+
     sqlite3* db = NULL;
 
     sqlite_connect(&db, "ip.db");
