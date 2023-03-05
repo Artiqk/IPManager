@@ -35,7 +35,7 @@ char* prefix_to_mask (int prefix_length) {
 
     char* mask_str = (char *)malloc(16 * sizeof(char));
 
-    sprintf(mask_str, "%d.%d.%d.%d", octet[0], octet[1], octet[2], octet[3]); // FIXME - Use snprintf for a more secure input
+    snprintf(mask_str, 16, "%d.%d.%d.%d", octet[0], octet[1], octet[2], octet[3]); // FIXME - Use snprintf for a more secure input
 
     return mask_str;
 }
@@ -97,7 +97,7 @@ char* ip_to_string (int ip[]) {
         exit(1);
     }
 
-    sprintf(ip_str, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+    snprintf(ip_str, 16, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
 
     return ip_str;
 }
