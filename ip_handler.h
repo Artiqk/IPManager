@@ -35,7 +35,7 @@ char* prefix_to_mask (int prefix_length) {
 
     char* mask_str = (char *)malloc(16 * sizeof(char));
 
-    snprintf(mask_str, 16, "%d.%d.%d.%d", octet[0], octet[1], octet[2], octet[3]); // FIXME - Use snprintf for a more secure input
+    snprintf(mask_str, 16, "%d.%d.%d.%d", octet[0], octet[1], octet[2], octet[3]);
 
     return mask_str;
 }
