@@ -61,15 +61,15 @@ void main_menu (sqlite3* db, int*** ip_addresses, int*** masks, int rows) {
             ip_added = 0;
         }
 
+        int mask_filter = 0;
+        char filter_choice[3] = {0};
+
         switch (choice) {
             case 1:
                 add_ip_to_database(db);
                 ip_added = 1;
                 break;
             case 2:
-                int mask_filter = 0;
-                char filter_choice[3] = {0};
-
                 while (!(filter_choice[0] == 'y' || filter_choice[0] == 'n')) {
                     printf("Do you want to add add a mask filter ? (y/n): ");
                     fgets(filter_choice, 3, stdin);
