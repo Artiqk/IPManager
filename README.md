@@ -1,4 +1,4 @@
-# IP-Manager
+# IPManager
 You will need a Debian with Aptitude to make this program work
 ## Install the dependancies
 ```
